@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import PaystackPop from '@paystack/inline-js'
 import './App.css'
 
 type Step = 'welcome' | 'profile' | 'quiz' | 'preview' | 'plans' | 'complete'
@@ -24,12 +25,38 @@ function App() {
   const [questionIndex, setQuestionIndex] = useState(0)
   const [answers, setAnswers] = useState<string[]>([])
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual'>('monthly')
+  const [email, setEmail] = useState('')
+  const [paymentError, setPaymentError] = useState('')
+  const [isCheckingOut, setIsCheckingOut] = useState(false)
   const question = questions[questionIndex]
   const answer = answers[questionIndex]
   const greeting = name.trim() || 'there'
   const career = useMemo(() => answers.some((item) => /Biology|Laboratory|medicine|health/i.test(item)) ? 'Health innovator' : answers.some((item) => /creative|art|Writing|designing/i.test(item)) ? 'Creative strategist' : 'Technology builder', [answers])
   const chooseAnswer = (value: string) => setAnswers((current) => { const next = [...current]; next[questionIndex] = value; return next })
   const reset = () => { setStep('welcome'); setName(''); setLevel(''); setQuestionIndex(0); setAnswers([]) }
+  const startCheckout = () => {
+    const key = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY
+    if (!email.trim()) { setPaymentError('Add an email address to continue securely.'); return }
+    if (!key) { setPaymentError('Checkout is not configured yet. Add VITE_PAYSTACK_PUBLIC_KEY to enable Paystack.'); return }
+    setPaymentError('')
+    setIsCheckingOut(true)
+    const isAnnual = selectedPlan === 'annual'
+    try {
+      const checkout = new PaystackPop()
+      checkout.newTransaction({
+        key,
+        email: email.trim(),
+        amount: isAnnual ? 1200000 : 150000,
+        currency: 'NGN',
+        firstName: name.trim() || undefined,
+        planInterval: isAnnual ? 'annually' : 'monthly',
+        metadata: { custom_fields: [{ display_name: 'Selected plan', variable_name: 'selected_plan', value: selectedPlan }] },
+        onSuccess: () => { setIsCheckingOut(false); setStep('complete') },
+        onCancel: () => setIsCheckingOut(false),
+        onError: (error: { message?: string }) => { setPaymentError(error.message || 'We could not start checkout. Please try again.'); setIsCheckingOut(false) },
+      })
+    } catch { setPaymentError('We could not start checkout. Please try again.'); setIsCheckingOut(false) }
+  }
 
   return <main className="app-shell"><section className="phone-frame" aria-label="Future Compass career guide">
     <header className="topbar"><button className="brand" type="button" onClick={reset} aria-label="Return home"><span className="brand-mark">✦</span><span>future<br />compass</span></button>{step === 'quiz' && <button className="quiet-button" type="button" onClick={() => questionIndex ? setQuestionIndex(questionIndex - 1) : setStep('profile')}>Back</button>}{step === 'welcome' && <span className="topbar-note">A guide for your next chapter</span>}</header>
@@ -42,9 +69,9 @@ function App() {
 
     {step === 'preview' && <section className="screen preview-screen"><p className="eyebrow">YOUR PERSONAL PATTERN</p><h1>There’s a strong signal here, {greeting}.</h1><div className="result-orbit"><i className="dot-one" /><i className="dot-two" /><i className="dot-three" /><span>✦</span></div><div className="result-card"><span className="result-kicker">YOUR LEADING DIRECTION</span><h2>{career}</h2><p>You seem energised by solving real problems, learning deeply, and making a practical difference.</p><div className="trait-pills"><span>Curious</span><span>Purpose-led</span><span>Capable</span></div></div><div className="locked-card"><div><span aria-hidden="true">🔒</span><strong>Your full roadmap is ready</strong><p>Unlock career matches, subject choices, university routes, and your next four steps.</p></div></div><button className="primary-button" type="button" onClick={() => setStep('plans')}>See my full roadmap <Arrow /></button><button className="text-button" type="button" onClick={reset}>Start over</button></section>}
 
-    {step === 'plans' && <section className="screen plans-screen"><button className="back-chip" type="button" onClick={() => setStep('preview')}>← Your preview</button><p className="eyebrow">UNLOCK YOUR ROADMAP</p><h1>Keep the momentum going.</h1><p className="plan-intro">Choose a plan that gives you room to explore—not a deadline to decide your life.</p><div className="plan-stack"><button type="button" className={`plan-card ${selectedPlan === 'monthly' ? 'chosen' : ''}`} onClick={() => setSelectedPlan('monthly')}><span className="radio" /><span><strong>Compass monthly</strong><small>Full roadmap and future check-ins</small></span><b>₦1,500<small>/ month</small></b></button><button type="button" className={`plan-card featured ${selectedPlan === 'annual' ? 'chosen' : ''}`} onClick={() => setSelectedPlan('annual')}><span className="plan-badge">BEST VALUE</span><span className="radio" /><span><strong>Compass yearly</strong><small>Everything in monthly, billed once</small></span><b>₦12,000<small>/ year</small></b></button></div><ul className="benefit-list"><li>Personal career and subject roadmap</li><li>University and programme shortlist</li><li>Save, revisit, and share your plan</li></ul><button className="primary-button" type="button" onClick={() => setStep('complete')}>Continue to demo checkout <Arrow /></button><p className="micro-copy">Demo only—this button does not process a payment.</p></section>}
+    {step === 'plans' && <section className="screen plans-screen"><button className="back-chip" type="button" onClick={() => setStep('preview')}>← Your preview</button><p className="eyebrow">UNLOCK YOUR ROADMAP</p><h1>Keep the momentum going.</h1><p className="plan-intro">Choose a plan that gives you room to explore—not a deadline to decide your life.</p><div className="plan-stack"><button type="button" className={`plan-card ${selectedPlan === 'monthly' ? 'chosen' : ''}`} onClick={() => setSelectedPlan('monthly')}><span className="radio" /><span><strong>Compass monthly</strong><small>Full roadmap and future check-ins</small></span><b>₦1,500<small>/ month</small></b></button><button type="button" className={`plan-card featured ${selectedPlan === 'annual' ? 'chosen' : ''}`} onClick={() => setSelectedPlan('annual')}><span className="plan-badge">BEST VALUE</span><span className="radio" /><span><strong>Compass yearly</strong><small>Everything in monthly, billed once</small></span><b>₦12,000<small>/ year</small></b></button></div><ul className="benefit-list"><li>Personal career and subject roadmap</li><li>University and programme shortlist</li><li>Save, revisit, and share your plan</li></ul><label className="checkout-email">Email for your subscription<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" autoComplete="email" required /></label>{paymentError && <p className="payment-error" role="alert">{paymentError}</p>}<button className="primary-button" type="button" onClick={startCheckout} disabled={isCheckingOut}>{isCheckingOut ? 'Opening checkout…' : 'Continue to secure checkout'} <Arrow /></button><p className="micro-copy">Payments are handled securely by Paystack.</p></section>}
 
-    {step === 'complete' && <section className="screen complete-screen"><div className="complete-image"><img src="/image-3.jpg" alt="A child looking through a microscope" /></div><span className="success-mark">✓</span><p className="eyebrow">YOUR DEMO SUBSCRIPTION IS ACTIVE</p><h1>Welcome to the next step, {greeting}.</h1><p>Your full roadmap would now be available here, ready to revisit whenever your ideas grow or change.</p><div className="roadmap-list"><span>01 <b>Career matches</b></span><span>02 <b>Subject pathway</b></span><span>03 <b>University options</b></span></div><button className="primary-button" type="button" onClick={reset}>Explore again <Arrow /></button><p className="micro-copy">No payment was collected.</p></section>}
+    {step === 'complete' && <section className="screen complete-screen"><div className="complete-image"><img src="/image-3.jpg" alt="A child looking through a microscope" /></div><span className="success-mark">✓</span><p className="eyebrow">YOUR SUBSCRIPTION IS CONFIRMED</p><h1>Welcome to the next step, {greeting}.</h1><p>Your full roadmap would now be available here, ready to revisit whenever your ideas grow or change.</p><div className="roadmap-list"><span>01 <b>Career matches</b></span><span>02 <b>Subject pathway</b></span><span>03 <b>University options</b></span></div><button className="primary-button" type="button" onClick={reset}>Explore again <Arrow /></button></section>}
   </section></main>
 }
 
