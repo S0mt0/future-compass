@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PaystackPop from "@paystack/inline-js";
 
 import { AppShell } from "./components/AppShell";
@@ -12,19 +12,44 @@ import { ReadingPanel } from "./components/ReadingPanel";
 import type { Step } from "./components/types";
 import { WelcomeScreen } from "./components/WelcomeScreen";
 
+const progressKey = "edu-compass-progress";
+
+type SavedProgress = {
+  step: Step;
+  name: string;
+  level: string;
+  questionIndex: number;
+  answers: string[];
+  selectedPlan: "monthly" | "annual";
+  email: string;
+  articlePage: number;
+};
+
+function loadProgress(): Partial<SavedProgress> {
+  if (typeof window === "undefined") return {};
+
+  try {
+    const saved = JSON.parse(window.localStorage.getItem(progressKey) || "{}") as Partial<SavedProgress>;
+    return saved && typeof saved === "object" ? saved : {};
+  } catch {
+    return {};
+  }
+}
+
 export default function App() {
-  const [step, setStep] = useState<Step>("welcome");
-  const [name, setName] = useState("");
-  const [level, setLevel] = useState("");
-  const [questionIndex, setQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<string[]>([]);
+  const [savedProgress] = useState(loadProgress);
+  const [step, setStep] = useState<Step>(savedProgress.step ?? "welcome");
+  const [name, setName] = useState(savedProgress.name ?? "");
+  const [level, setLevel] = useState(savedProgress.level ?? "");
+  const [questionIndex, setQuestionIndex] = useState(savedProgress.questionIndex ?? 0);
+  const [answers, setAnswers] = useState<string[]>(savedProgress.answers ?? []);
   const [selectedPlan, setSelectedPlan] = useState<"monthly" | "annual">(
-    "monthly"
+    savedProgress.selectedPlan ?? "monthly"
   );
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(savedProgress.email ?? "");
   const [paymentError, setPaymentError] = useState("");
   const [isCheckingOut, setIsCheckingOut] = useState(false);
-  const [articlePage, setArticlePage] = useState(0);
+  const [articlePage, setArticlePage] = useState(savedProgress.articlePage ?? 0);
   const question = questions[questionIndex];
   const answer = answers[questionIndex];
   const greeting = name.trim() || "there";
@@ -46,6 +71,20 @@ export default function App() {
       return next;
     });
 
+  useEffect(() => {
+    const progress: SavedProgress = {
+      step,
+      name,
+      level,
+      questionIndex,
+      answers,
+      selectedPlan,
+      email,
+      articlePage,
+    };
+    window.localStorage.setItem(progressKey, JSON.stringify(progress));
+  }, [answers, articlePage, email, level, name, questionIndex, selectedPlan, step]);
+
   const reset = () => {
     setStep("welcome");
     setName("");
@@ -53,6 +92,7 @@ export default function App() {
     setQuestionIndex(0);
     setAnswers([]);
     setArticlePage(0);
+    window.localStorage.removeItem(progressKey);
   };
 
   const startCheckout = () => {
@@ -109,9 +149,13 @@ export default function App() {
     questionIndex ? setQuestionIndex(questionIndex - 1) : setStep("profile");
 
   return (
-    <main className="relative grid min-h-svh place-items-center overflow-hidden bg-[radial-gradient(circle_at_12%_15%,#e6f3a5_0,transparent_20rem),radial-gradient(circle_at_90%_85%,#ffd4ca_0,transparent_20rem),#eae7dc] p-0 min-[720px]:h-svh min-[720px]:min-h-0 min-[720px]:overflow-hidden min-[720px]:p-[clamp(28px,5vw,72px)] before:pointer-events-none before:absolute before:inset-[-18%] before:-z-1 before:rotate-[-8deg] before:opacity-[.52] before:content-[''] before:bg-[radial-gradient(ellipse_38rem_38rem_at_14%_74%,transparent_0_58%,rgba(23,63,56,.14)_58.2%_58.45%,transparent_58.7%),radial-gradient(ellipse_32rem_32rem_at_89%_21%,transparent_0_61%,rgba(243,109,80,.16)_61.2%_61.45%,transparent_61.7%)] after:pointer-events-none after:absolute after:inset-0 after:-z-1 after:opacity-[.26] after:content-[''] after:bg-[radial-gradient(rgba(23,63,56,.34)_0.55px,transparent_0.75px)] after:bg-size-[5px_5px]">
-      <div className="w-full max-w-[540px] min-[720px]:max-w-[1180px] min-[1320px]:grid min-[1320px]:max-w-[1510px] min-[1320px]:grid-cols-[minmax(0,1180px)_270px] min-[1320px]:gap-[22px]">
-        <AppShell step={step} onReset={reset} onBack={goBack}>
+    <main className="relative grid min-h-svh place-items-center overflow-hidden bg-[#eae7dc] p-0 min-[720px]:h-svh min-[720px]:min-h-0 min-[720px]:overflow-hidden min-[720px]:p-[clamp(28px,5vw,72px)] max-[560px]:block max-[560px]:bg-paper">
+      <div aria-hidden="true" className="pointer-events-none absolute -left-48 -top-48 h-[570px] w-[570px] rounded-full bg-lime/55 blur-[82px] min-[720px]:block" />
+      <div aria-hidden="true" className="pointer-events-none absolute -bottom-56 -right-40 h-[620px] w-[620px] rounded-full bg-coral/20 blur-[100px] min-[720px]:block" />
+      <div aria-hidden="true" className="pointer-events-none absolute -bottom-[30rem] -left-[24rem] hidden h-[650px] w-[650px] rounded-full border border-forest/15 min-[720px]:block" />
+      <div aria-hidden="true" className="pointer-events-none absolute -right-[22rem] -top-[25rem] hidden h-[650px] w-[650px] rounded-full border border-coral/20 min-[720px]:block" />
+      <div className="relative z-1 w-full max-w-[540px] min-[720px]:max-w-[1180px] min-[1320px]:grid min-[1320px]:max-w-[1510px] min-[1320px]:grid-cols-[minmax(0,1180px)_270px] min-[1320px]:gap-[22px] max-[560px]:max-w-none">
+        <AppShell step={step} onReset={reset}>
           {step === "welcome" && (
             <WelcomeScreen onStart={() => setStep("profile")} />
           )}
@@ -136,6 +180,7 @@ export default function App() {
               total={questions.length}
               answer={answer}
               onAnswer={chooseAnswer}
+              onBack={goBack}
               onContinue={() =>
                 questionIndex === questions.length - 1
                   ? setStep("preview")

@@ -15,7 +15,7 @@ export function PrimaryButton({
 }: ButtonHTMLAttributes<HTMLButtonElement> & { children: ReactNode }) {
   return (
     <button
-      className={`flex min-h-15 w-full items-center justify-between rounded-[17px] bg-forest px-5 text-base font-bold text-white transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40 ${className}`}
+      className={`flex h-[59px] w-full shrink-0 items-center justify-between rounded-[17px] bg-forest px-5 text-base font-bold text-white transition hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40 ${className}`}
       {...props}
     >
       {children}

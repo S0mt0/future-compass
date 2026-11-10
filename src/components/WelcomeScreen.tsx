@@ -1,6 +1,28 @@
 import { Arrow, PrimaryButton } from "./ui";
+import { Cursor, useTypewriter } from "react-simple-typewriter";
+import { useEffect, useState } from "react";
+
+const punchlines = [
+  "that shape your future.",
+  "and make the vision real.",
+  "toward what feels right.",
+];
 
 export function WelcomeScreen({ onStart }: { onStart: () => void }) {
+  const [typewriterReady, setTypewriterReady] = useState(false);
+  const [punchline] = useTypewriter({
+    words: typewriterReady ? punchlines : [punchlines[0]],
+    loop: true,
+    typeSpeed: 46,
+    deleteSpeed: 28,
+    delaySpeed: 2200,
+  });
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setTypewriterReady(true), 5200);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   return (
     <section className="grid flex-1 p-[10px_28px_30px] min-[720px]:grid-cols-[minmax(0,.92fr)_minmax(390px,1.08fr)] min-[720px]:grid-rows-[1fr_auto_auto_auto] min-[720px]:items-center min-[720px]:gap-x-[clamp(44px,7vw,96px)] min-[720px]:overflow-hidden min-[720px]:p-[34px_clamp(44px,6vw,76px)_54px]">
       <div className="relative -mx-7 mb-8 h-[280px] overflow-hidden bg-cream min-[720px]:col-start-2 min-[720px]:row-span-4 min-[720px]:m-0 min-[720px]:h-full min-[720px]:min-h-[510px] min-[720px]:rounded-[28px]">
@@ -15,8 +37,13 @@ export function WelcomeScreen({ onStart }: { onStart: () => void }) {
       </div>
       <div className="min-[720px]:col-start-1 min-[720px]:row-start-1 min-[720px]:self-end">
         <p className="eyebrow">CAREER EXPLORATION, MADE HUMAN</p>
-        <h1 className="heading">
-          Follow the clues <em className="text-coral">only you</em> have.
+        <h1 className="heading text-[clamp(44px,11vw,58px)] min-[720px]:max-w-[560px] min-[720px]:text-[clamp(58px,4.4vw,70px)]">
+          Follow the clues
+          <em className="block min-h-[2.94em] text-coral min-[720px]:min-h-[1.96em]">
+            {/* {typewriterReady ? punchline : punchlines[0]} */}
+            {punchline}
+            {typewriterReady && <Cursor cursorStyle="|" />}
+          </em>
         </h1>
         <p className="my-5 text-base leading-[1.55] text-muted min-[720px]:mb-7 min-[720px]:max-w-[450px] min-[720px]:text-[17px]">
           Eight thoughtful questions. A clearer next step. No pressure to have

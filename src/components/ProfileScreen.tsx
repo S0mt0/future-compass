@@ -1,4 +1,4 @@
-import type { FormEvent } from "react";
+import type { ChangeEvent } from "react";
 import { Arrow, PrimaryButton } from "./ui";
 
 type Props = {
@@ -6,7 +6,7 @@ type Props = {
   level: string;
   onName: (value: string) => void;
   onLevel: (value: string) => void;
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onSubmit: (event: ChangeEvent<HTMLFormElement>) => void;
 };
 export function ProfileScreen({
   name,
@@ -34,9 +34,9 @@ export function ProfileScreen({
       </div>
       <form
         onSubmit={onSubmit}
-        className="grid gap-[18px] min-[720px]:col-start-1 min-[720px]:max-w-[460px]"
+        className="grid content-start gap-[14px] self-start min-[720px]:col-start-1 min-[720px]:max-w-[460px]"
       >
-        <label className="grid gap-2 text-[13px] font-bold text-forest min-[720px]:text-sm">
+        <label className="grid gap-1.5 text-[13px] font-bold text-forest min-[720px]:text-sm">
           What should we call you?
           <input
             className="h-[57px] rounded-[14px] border border-line bg-white px-[15px] text-base outline-none focus:border-forest focus:ring-3 focus:ring-forest/10"
@@ -48,7 +48,7 @@ export function ProfileScreen({
             required
           />
         </label>
-        <label className="grid gap-2 text-[13px] font-bold text-forest min-[720px]:text-sm">
+        <label className="grid gap-1.5 text-[13px] font-bold text-forest min-[720px]:text-sm">
           Which class are you in?
           <select
             className="h-[57px] rounded-[14px] border border-line bg-white px-[15px] text-base outline-none focus:border-forest focus:ring-3 focus:ring-forest/10"
