@@ -14,3 +14,15 @@
   --font-display: "Fraunces", serif;
   --font-mono: "Inconsolata", monospace;
 }
+
+button {
+  @apply cursor-pointer;
+}
+
+.eyebrow {
+  @apply mb-3.5 font-mono text-xs leading-none font-semibold tracking-[.07em] text-forest;
+}
+
+.heading {
+  @apply font-display text-[clamp(39px,9vw,54px)] leading-[.98] font-semibold tracking-[-.052em] text-ink;
+}

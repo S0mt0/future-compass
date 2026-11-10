@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import PaystackPop from "@paystack/inline-js";
+
 import { AppShell } from "./components/AppShell";
 import { articles, questions } from "./components/data";
 import { CompleteScreen } from "./components/CompleteScreen";
@@ -27,6 +28,7 @@ export default function App() {
   const question = questions[questionIndex];
   const answer = answers[questionIndex];
   const greeting = name.trim() || "there";
+
   const career = useMemo(
     () =>
       answers.some((item) => /Biology|Laboratory|medicine|health/i.test(item))
@@ -36,12 +38,14 @@ export default function App() {
         : "Technology builder",
     [answers]
   );
+
   const chooseAnswer = (value: string) =>
     setAnswers((current) => {
       const next = [...current];
       next[questionIndex] = value;
       return next;
     });
+
   const reset = () => {
     setStep("welcome");
     setName("");
@@ -50,6 +54,7 @@ export default function App() {
     setAnswers([]);
     setArticlePage(0);
   };
+
   const startCheckout = () => {
     const key = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
     if (!email.trim()) {
@@ -99,15 +104,18 @@ export default function App() {
       setIsCheckingOut(false);
     }
   };
+
   const goBack = () =>
     questionIndex ? setQuestionIndex(questionIndex - 1) : setStep("profile");
+
   return (
     <main className="relative grid min-h-svh place-items-center overflow-hidden bg-[radial-gradient(circle_at_12%_15%,#e6f3a5_0,transparent_20rem),radial-gradient(circle_at_90%_85%,#ffd4ca_0,transparent_20rem),#eae7dc] p-0 min-[720px]:h-svh min-[720px]:min-h-0 min-[720px]:overflow-hidden min-[720px]:p-[clamp(28px,5vw,72px)] before:pointer-events-none before:absolute before:inset-[-18%] before:-z-1 before:rotate-[-8deg] before:opacity-[.52] before:content-[''] before:bg-[radial-gradient(ellipse_38rem_38rem_at_14%_74%,transparent_0_58%,rgba(23,63,56,.14)_58.2%_58.45%,transparent_58.7%),radial-gradient(ellipse_32rem_32rem_at_89%_21%,transparent_0_61%,rgba(243,109,80,.16)_61.2%_61.45%,transparent_61.7%)] after:pointer-events-none after:absolute after:inset-0 after:-z-1 after:opacity-[.26] after:content-[''] after:bg-[radial-gradient(rgba(23,63,56,.34)_0.55px,transparent_0.75px)] after:bg-size-[5px_5px]">
-      <div className="w-full max-w-[540px] min-[720px]:w-[min(100%,1180px)] min-[1320px]:grid min-[1320px]:w-[min(100%,1510px)] min-[1320px]:grid-cols-[minmax(0,1180px)_270px] min-[1320px]:gap-[22px]">
+      <div className="w-full max-w-[540px] min-[720px]:max-w-[1180px] min-[1320px]:grid min-[1320px]:max-w-[1510px] min-[1320px]:grid-cols-[minmax(0,1180px)_270px] min-[1320px]:gap-[22px]">
         <AppShell step={step} onReset={reset} onBack={goBack}>
           {step === "welcome" && (
             <WelcomeScreen onStart={() => setStep("profile")} />
           )}
+
           {step === "profile" && (
             <ProfileScreen
               name={name}
@@ -120,6 +128,7 @@ export default function App() {
               }}
             />
           )}
+
           {step === "quiz" && (
             <QuizScreen
               question={question}
@@ -134,6 +143,7 @@ export default function App() {
               }
             />
           )}
+
           {step === "preview" && (
             <PreviewScreen
               greeting={greeting}
@@ -142,6 +152,7 @@ export default function App() {
               onReset={reset}
             />
           )}
+
           {step === "plans" && (
             <PlansScreen
               selectedPlan={selectedPlan}
@@ -154,10 +165,12 @@ export default function App() {
               onCheckout={startCheckout}
             />
           )}
+
           {step === "complete" && (
             <CompleteScreen greeting={greeting} onReset={reset} />
           )}
         </AppShell>
+
         <ReadingPanel
           articles={articles}
           page={articlePage}

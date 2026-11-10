@@ -23,7 +23,7 @@ export function PrimaryButton({
   );
 }
 
-export const eyebrowClass =
-  "mb-3.5 font-mono text-xs leading-none font-semibold tracking-[.07em] text-forest";
-export const headingClass =
-  "font-display text-[clamp(39px,9vw,54px)] leading-[.98] font-semibold tracking-[-.052em] text-ink";
+// export const eyebrowClass =
+//   "mb-3.5 font-mono text-xs leading-none font-semibold tracking-[.07em] text-forest";
+// export const headingClass =
+//   "font-display text-[clamp(39px,9vw,54px)] leading-[.98] font-semibold tracking-[-.052em] text-ink";
