@@ -1,18 +1,22 @@
-import type { ChangeEvent } from "react";
+import type { FormEvent } from "react";
 import { Arrow, PrimaryButton } from "./ui";
 
 type Props = {
   name: string;
   level: string;
+  email: string;
   onName: (value: string) => void;
   onLevel: (value: string) => void;
-  onSubmit: (event: ChangeEvent<HTMLFormElement>) => void;
+  onEmail: (value: string) => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 };
 export function ProfileScreen({
   name,
   level,
+  email,
   onName,
   onLevel,
+  onEmail,
   onSubmit,
 }: Props) {
   return (
@@ -52,6 +56,18 @@ export function ProfileScreen({
           />
         </label>
         <label className="grid gap-1.5 text-[13px] font-bold text-forest min-[720px]:text-sm">
+          What’s your email address?
+          <input
+            className="h-[57px] rounded-[14px] border border-line bg-white px-[15px] text-base outline-none focus:border-forest focus:ring-3 focus:ring-forest/10"
+            type="email"
+            value={email}
+            onChange={(event) => onEmail(event.target.value)}
+            autoComplete="email"
+            placeholder="you@example.com"
+            required
+          />
+        </label>
+        <label className="grid gap-1.5 text-[13px] font-bold text-forest min-[720px]:text-sm">
           Which class are you in?
           <select
             className="h-[57px] rounded-[14px] border border-line bg-white px-[15px] text-base outline-none focus:border-forest focus:ring-3 focus:ring-forest/10"
@@ -67,7 +83,7 @@ export function ProfileScreen({
         </label>
         <PrimaryButton
           type="submit"
-          disabled={!name.trim() || !level}
+          disabled={!name.trim() || !level || !/^\S+@\S+\.\S+$/.test(email.trim())}
           className="mt-2"
         >
           Continue <Arrow />

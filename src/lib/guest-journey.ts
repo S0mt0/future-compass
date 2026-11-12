@@ -1,14 +1,24 @@
 import type { Step } from "../components/types";
 
 const storageKey = "edu-compass.guest-journey.v2";
+const paymentRecoveryKey = "edu-compass.payment-recovery.v1";
 const steps = new Set<Step>([
   "welcome",
   "profile",
   "quiz",
   "preview",
+  "access",
   "plans",
   "complete",
+  "preparing",
+  "results",
 ]);
+
+export type Entitlement = {
+  email: string;
+  active: boolean;
+  checkedAt: string;
+};
 
 export type GuestJourney = {
   guestId: string;
@@ -24,6 +34,10 @@ export type GuestJourney = {
   organisationName: string;
   seats: number;
   email: string;
+  entitlement?: Entitlement;
+  backendJourneyId?: string;
+  paymentReference?: string;
+  paymentVerified?: boolean;
   articlePage: number;
 };
 
@@ -78,3 +92,17 @@ export function readGuestJourney(): GuestJourney {
 
 export const saveGuestJourney = (journey: GuestJourney) =>
   window.localStorage.setItem(storageKey, JSON.stringify(journey));
+
+export const clearGuestJourney = () => window.localStorage.removeItem(storageKey);
+
+export const savePaymentRecovery = (reference: string) => {
+  window.localStorage.setItem(
+    paymentRecoveryKey,
+    JSON.stringify({ reference, verifiedAt: new Date().toISOString() })
+  );
+};
+
+export const preservePaymentRecovery = (journey: GuestJourney) => {
+  if (!journey.paymentReference || !journey.paymentVerified) return;
+  savePaymentRecovery(journey.paymentReference);
+};

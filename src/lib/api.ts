@@ -41,6 +41,21 @@ export type VerifiedPayment = {
   transaction: { status?: string };
   accessCode: { code: string; email: string; role: string } | null;
 };
+export type AuthAccount = {
+  email: string;
+  role: string;
+  organisationId?: string;
+  organisationName?: string;
+};
+export type AuthStatus = { authenticated: boolean; account?: AuthAccount };
+export type EntitlementDecision = {
+  hasActiveEntitlement: boolean;
+  requiresCode: boolean;
+  needsSubscription: boolean;
+};
+export type AssessmentResult = Record<string, unknown>;
+export type SyncedJourney = { id: string; status: string; result?: { data: AssessmentResult } | null };
+export type SyncResult = { status: string; journey: SyncedJourney; result?: { data: AssessmentResult } | AssessmentResult | null };
 export class ApiError extends Error {
   readonly code?: string;
   readonly status?: number;
@@ -85,3 +100,25 @@ export const verifyPayment = (reference: string) =>
   read<VerifiedPayment>(
     `/api/paystack/verify/${encodeURIComponent(reference)}`
   );
+export const identifyEntitlement = (email: string) =>
+  read<EntitlementDecision>("/api/auth/identify", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+export const verifyAccessCode = (email: string, code: string) =>
+  read<{ account: AuthAccount }>("/api/auth/verify-code", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email, code }),
+  });
+export const getAuthStatus = () => read<AuthStatus>("/api/auth/me");
+export const logout = () => read<{ success: boolean }>("/api/auth/logout", { method: "POST" });
+export const synchronizeJourney = (input: Record<string, unknown>) =>
+  read<SyncResult>("/api/journeys/sync", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(input),
+  });
+export const getJourneyResult = (id: string) =>
+  read<{ status: string; result: { data: AssessmentResult } }>(`/api/journeys/${encodeURIComponent(id)}/result`);

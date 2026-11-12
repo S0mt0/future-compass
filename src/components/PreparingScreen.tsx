@@ -1,0 +1,3 @@
+export function PreparingScreen({ error, onRetry }: { error: string; onRetry: () => void }) {
+  return <section className="grid flex-1 place-items-center p-10 text-center"><div><p className="eyebrow">PREPARING YOUR ROADMAP</p><h1 className="heading">Turning your answers into next steps.</h1><p className="mt-3 text-sm text-muted">This can take a moment. Your assessment is safely saved.</p>{error && <><p role="alert" className="mt-4 text-sm text-[#b2321c]">{error}</p><button type="button" className="mt-4 min-h-11 font-bold text-forest underline" onClick={onRetry}>Try again</button></>}</div></section>;
+}

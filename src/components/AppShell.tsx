@@ -1,14 +1,17 @@
 import type { ReactNode } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { Step } from "./types";
+import type { AuthAccount } from "../lib/api";
 
 type Props = {
   children: ReactNode;
   step: Step;
   onReset: () => void;
+  account?: AuthAccount;
+  onLogout: () => void;
 };
 
-export function AppShell({ children, step, onReset }: Props) {
+export function AppShell({ children, step, onReset, account, onLogout }: Props) {
   const reduceMotion = useReducedMotion();
   return (
     <section
@@ -47,6 +50,7 @@ export function AppShell({ children, step, onReset }: Props) {
             a guide for your next chapter
           </span>
         </button>
+        {account && <details className="relative"><summary className="min-h-11 cursor-pointer list-none rounded-full border border-line bg-white px-3 py-2 text-xs font-bold text-forest">Account</summary><div className="absolute right-0 top-[calc(100%+8px)] z-10 w-[230px] rounded-[14px] border border-line bg-paper p-3 shadow-[0_12px_30px_rgba(23,63,56,.16)]"><p className="break-all text-xs text-muted">{account.email}</p><button type="button" className="mt-3 min-h-11 text-sm font-bold text-forest underline" onClick={onLogout}>Log out</button></div></details>}
       </header>
       <AnimatePresence mode="wait" initial={false}>
         <motion.div

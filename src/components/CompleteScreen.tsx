@@ -1,16 +1,31 @@
+import { useState } from "react";
+
 import { Arrow, PrimaryButton } from "./ui";
 
 export function CompleteScreen({
   greeting,
   accessCode,
   accessEmail,
-  onReset,
+  onReview,
 }: {
   greeting: string;
   accessCode?: string;
   accessEmail?: string;
-  onReset: () => void;
+  onReview: () => void;
 }) {
+  const [copyStatus, setCopyStatus] = useState<"idle" | "success" | "error">(
+    "idle"
+  );
+
+  const copyAccessCode = async () => {
+    try {
+      await navigator.clipboard.writeText(accessCode ?? "");
+      setCopyStatus("success");
+    } catch {
+      setCopyStatus("error");
+    }
+  };
+
   return (
     <section className="flex-1 overflow-auto p-[5px_28px_36px] text-center min-[720px]:mx-auto min-[720px]:max-w-[720px] min-[720px]:p-[34px_clamp(44px,6vw,76px)_54px]">
       <div className="mb-[23px] -mx-7 h-[190px] overflow-hidden min-[720px]:mx-0 min-[720px]:h-[250px] min-[720px]:rounded-[27px]">
@@ -31,7 +46,35 @@ export function CompleteScreen({
         Your full roadmap would now be available here, ready to revisit whenever
         your ideas grow or change.
       </p>
-      {accessCode && <div className="mb-5 rounded-[19px] border border-line bg-[#f0f5d7] p-4 text-left"><p className="font-mono text-[11px] text-coral">YOUR EDU COMPASS ACCESS CARD</p><p className="mt-2 text-xs text-muted">{accessEmail}</p><code className="mt-2 block break-all text-sm font-bold text-forest">{accessCode}</code><button type="button" className="mt-3 min-h-11 text-sm font-bold text-forest underline" onClick={() => navigator.clipboard.writeText(accessCode)}>Copy access code</button><p className="mt-2 text-xs text-muted">Keep this code private. It is required with your email to access your account.</p></div>}
+      {accessCode && (
+        <div className="mb-5 rounded-[19px] border border-line bg-[#f0f5d7] p-4 text-left">
+          <p className="font-mono text-[11px] text-coral">
+            YOUR EDU COMPASS ACCESS CARD
+          </p>
+          <p className="mt-2 text-xs text-muted">{accessEmail}</p>
+          <code className="mt-2 block break-all text-sm font-bold text-forest">
+            {accessCode}
+          </code>
+          <button
+            type="button"
+            className="mt-3 min-h-11 text-sm font-bold text-forest underline"
+            onClick={() => void copyAccessCode()}
+          >
+            {copyStatus === "success" ? "Copied to clipboard" : "Copy access code"}
+          </button>
+          <p
+            className={`mt-2 text-xs ${copyStatus === "error" ? "text-[#b2321c]" : "text-muted"}`}
+            role={copyStatus === "error" ? "alert" : "status"}
+            aria-live="polite"
+          >
+            {copyStatus === "success"
+              ? "Your access code has been copied."
+              : copyStatus === "error"
+                ? "We could not copy the code. Please select and copy it manually."
+                : "Keep this code private. It is required with your email to access your account."}
+          </p>
+        </div>
+      )}
       <div className="mb-[22px] grid gap-2 text-left">
         <span className="border-b border-line p-[13px] font-mono text-xs text-coral">
           01{" "}
@@ -51,10 +94,10 @@ export function CompleteScreen({
         </span>
       </div>
       <PrimaryButton
-        onClick={onReset}
+        onClick={onReview}
         className="min-[720px]:mx-auto min-[720px]:max-w-[520px]"
       >
-        Explore again <Arrow />
+        Review my results <Arrow />
       </PrimaryButton>
     </section>
   );
