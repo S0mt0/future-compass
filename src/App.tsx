@@ -1,103 +1,64 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import PaystackPop from "@paystack/inline-js";
 
 import { AppShell } from "./components/AppShell";
-import { articles, questions } from "./components/data";
+import { articles } from "./components/data";
 import { CompleteScreen } from "./components/CompleteScreen";
 import { PlansScreen } from "./components/PlansScreen";
 import { PreviewScreen } from "./components/PreviewScreen";
 import { ProfileScreen } from "./components/ProfileScreen";
 import { QuizScreen } from "./components/QuizScreen";
 import { ReadingPanel } from "./components/ReadingPanel";
-import type { Step } from "./components/types";
 import { WelcomeScreen } from "./components/WelcomeScreen";
-
-const progressKey = "edu-compass-progress";
-
-type SavedProgress = {
-  step: Step;
-  name: string;
-  level: string;
-  questionIndex: number;
-  answers: string[];
-  selectedPlan: "monthly" | "annual";
-  email: string;
-  articlePage: number;
-};
-
-function loadProgress(): Partial<SavedProgress> {
-  if (typeof window === "undefined") return {};
-
-  try {
-    const saved = JSON.parse(window.localStorage.getItem(progressKey) || "{}") as Partial<SavedProgress>;
-    return saved && typeof saved === "object" ? saved : {};
-  } catch {
-    return {};
-  }
-}
+import { getPublishedQuizzes, getQuestionCount, getQuiz, type Quiz } from "./lib/api";
+import { newGuestJourney, readGuestJourney, saveGuestJourney, type GuestJourney } from "./lib/guest-journey";
 
 export default function App() {
-  const [savedProgress] = useState(loadProgress);
-  const [step, setStep] = useState<Step>(savedProgress.step ?? "welcome");
-  const [name, setName] = useState(savedProgress.name ?? "");
-  const [level, setLevel] = useState(savedProgress.level ?? "");
-  const [questionIndex, setQuestionIndex] = useState(savedProgress.questionIndex ?? 0);
-  const [answers, setAnswers] = useState<string[]>(savedProgress.answers ?? []);
-  const [selectedPlan, setSelectedPlan] = useState<"monthly" | "annual">(
-    savedProgress.selectedPlan ?? "monthly"
-  );
-  const [email, setEmail] = useState(savedProgress.email ?? "");
+  const [journey, setJourney] = useState<GuestJourney>(() => readGuestJourney());
+  const [quiz, setQuiz] = useState<Quiz | null>(null);
+  const [questionCount, setQuestionCount] = useState<number | null>(null);
+  const [quizError, setQuizError] = useState("");
+  const [isLoadingQuiz, setIsLoadingQuiz] = useState(true);
   const [paymentError, setPaymentError] = useState("");
   const [isCheckingOut, setIsCheckingOut] = useState(false);
-  const [articlePage, setArticlePage] = useState(savedProgress.articlePage ?? 0);
-  const question = questions[questionIndex];
-  const answer = answers[questionIndex];
-  const greeting = name.trim() || "there";
+  const question = quiz?.questions[journey.questionIndex];
+  const answer = question ? journey.answers[question.id] : undefined;
+  const greeting = journey.name.trim() || "there";
+  const updateJourney = (patch: Partial<GuestJourney>) => setJourney((current) => ({ ...current, ...patch }));
 
-  const career = useMemo(
-    () =>
-      answers.some((item) => /Biology|Laboratory|medicine|health/i.test(item))
-        ? "Health innovator"
-        : answers.some((item) => /creative|art|Writing|designing/i.test(item))
-        ? "Creative strategist"
-        : "Technology builder",
-    [answers]
-  );
+  const career = "Your unique direction";
 
-  const chooseAnswer = (value: string) =>
-    setAnswers((current) => {
-      const next = [...current];
-      next[questionIndex] = value;
-      return next;
-    });
+  const chooseAnswer = (value: string) => { if (question) updateJourney({ answers: { ...journey.answers, [question.id]: value } }); };
 
   useEffect(() => {
-    const progress: SavedProgress = {
-      step,
-      name,
-      level,
-      questionIndex,
-      answers,
-      selectedPlan,
-      email,
-      articlePage,
-    };
-    window.localStorage.setItem(progressKey, JSON.stringify(progress));
-  }, [answers, articlePage, email, level, name, questionIndex, selectedPlan, step]);
+    saveGuestJourney(journey);
+  }, [journey]);
 
-  const reset = () => {
-    setStep("welcome");
-    setName("");
-    setLevel("");
-    setQuestionIndex(0);
-    setAnswers([]);
-    setArticlePage(0);
-    window.localStorage.removeItem(progressKey);
-  };
+  const loadCurrentQuiz = useCallback(async () => {
+    setIsLoadingQuiz(true); setQuizError("");
+    try {
+      const quizzes = await getPublishedQuizzes();
+      const selected = quizzes.find((item) => item.id === journey.quizId) ?? quizzes[0];
+      if (!selected) throw new Error("No assessment is available right now.");
+      const loaded = await getQuiz(selected.slug);
+      if (journey.quizVersion && journey.quizVersion !== loaded.version) {
+        setJourney({ ...newGuestJourney(), quizId: loaded.id, quizVersion: loaded.version });
+        setPaymentError("The assessment has been updated, so we’ve started you with the latest questions.");
+      } else if (!journey.quizId) updateJourney({ quizId: loaded.id, quizVersion: loaded.version });
+      setQuiz(loaded);
+    } catch (error) { setQuizError(error instanceof Error ? error.message : "We could not load the assessment."); }
+    finally { setIsLoadingQuiz(false); }
+  }, [journey]);
+
+  useEffect(() => { void loadCurrentQuiz(); }, []);
+  useEffect(() => { getQuestionCount().then(setQuestionCount).catch(() => undefined); }, []);
+  useEffect(() => { const revalidate = () => { if (document.visibilityState === "visible") void loadCurrentQuiz(); }; window.addEventListener("focus", revalidate); document.addEventListener("visibilitychange", revalidate); return () => { window.removeEventListener("focus", revalidate); document.removeEventListener("visibilitychange", revalidate); }; }, [loadCurrentQuiz]);
+
+  const reset = () => setJourney({ ...newGuestJourney(), quizId: quiz?.id, quizVersion: quiz?.version });
 
   const startCheckout = () => {
     const key = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
-    if (!email.trim()) {
+    if (!journey.email.trim()) {
       setPaymentError("Add an email address to continue securely.");
       return;
     }
@@ -109,27 +70,27 @@ export default function App() {
     }
     setPaymentError("");
     setIsCheckingOut(true);
-    const isAnnual = selectedPlan === "annual";
+    const isAnnual = journey.selectedPlan === "annual";
     try {
       new PaystackPop().newTransaction({
         key,
-        email: email.trim(),
+        email: journey.email.trim(),
         amount: isAnnual ? 1200000 : 150000,
         currency: "NGN",
-        firstName: name.trim() || undefined,
+        firstName: journey.name.trim() || undefined,
         planInterval: isAnnual ? "annually" : "monthly",
         metadata: {
           custom_fields: [
             {
               display_name: "Selected plan",
               variable_name: "selected_plan",
-              value: selectedPlan,
+              value: journey.selectedPlan,
             },
           ],
         },
         onSuccess: () => {
           setIsCheckingOut(false);
-          setStep("complete");
+          updateJourney({ step: "complete" });
         },
         onCancel: () => setIsCheckingOut(false),
         onError: (error: { message?: string }) => {
@@ -145,8 +106,7 @@ export default function App() {
     }
   };
 
-  const goBack = () =>
-    questionIndex ? setQuestionIndex(questionIndex - 1) : setStep("profile");
+  const goBack = () => journey.questionIndex ? updateJourney({ questionIndex: journey.questionIndex - 1 }) : updateJourney({ step: "profile" });
 
   return (
     <main className="relative grid min-h-svh place-items-center overflow-hidden bg-[#eae7dc] p-0 min-[720px]:h-svh min-[720px]:min-h-0 min-[720px]:overflow-hidden min-[720px]:p-[clamp(28px,5vw,72px)] max-[560px]:block max-[560px]:bg-paper">
@@ -155,71 +115,73 @@ export default function App() {
       <div aria-hidden="true" className="pointer-events-none absolute -bottom-[30rem] -left-[24rem] hidden h-[650px] w-[650px] rounded-full border border-forest/15 min-[720px]:block" />
       <div aria-hidden="true" className="pointer-events-none absolute -right-[22rem] -top-[25rem] hidden h-[650px] w-[650px] rounded-full border border-coral/20 min-[720px]:block" />
       <div className="relative z-1 w-full max-w-[540px] min-[720px]:max-w-[1180px] min-[1320px]:grid min-[1320px]:max-w-[1510px] min-[1320px]:grid-cols-[minmax(0,1180px)_270px] min-[1320px]:gap-[22px] max-[560px]:max-w-none">
-        <AppShell step={step} onReset={reset}>
-          {step === "welcome" && (
-            <WelcomeScreen onStart={() => setStep("profile")} />
+        <AppShell step={journey.step} onReset={reset}>
+          {journey.step === "welcome" && (
+            <WelcomeScreen onStart={() => updateJourney({ step: "profile" })} questionCount={questionCount} />
           )}
 
-          {step === "profile" && (
+          {journey.step === "profile" && (
             <ProfileScreen
-              name={name}
-              level={level}
-              onName={setName}
-              onLevel={setLevel}
+              name={journey.name}
+              level={journey.level}
+              onName={(name) => updateJourney({ name })}
+              onLevel={(level) => updateJourney({ level })}
               onSubmit={(event) => {
                 event.preventDefault();
-                if (name.trim() && level) setStep("quiz");
+                if (journey.name.trim() && journey.level) updateJourney({ step: "quiz" });
               }}
             />
           )}
 
-          {step === "quiz" && (
+          {journey.step === "quiz" && isLoadingQuiz && <section className="grid flex-1 place-items-center p-10 text-center"><div><p className="eyebrow">LOADING ASSESSMENT</p><h1 className="heading">Preparing your questions.</h1></div></section>}
+          {journey.step === "quiz" && quizError && <section className="grid flex-1 place-items-center p-10 text-center"><div><p role="alert" className="text-sm text-[#b2321c]">{quizError}</p><button type="button" onClick={() => void loadCurrentQuiz()} className="mt-4 font-bold text-coral">Try again</button></div></section>}
+          {journey.step === "quiz" && question && !isLoadingQuiz && !quizError && (
             <QuizScreen
               question={question}
-              index={questionIndex}
-              total={questions.length}
+              index={journey.questionIndex}
+              total={quiz.questions.length}
               answer={answer}
               onAnswer={chooseAnswer}
               onBack={goBack}
               onContinue={() =>
-                questionIndex === questions.length - 1
-                  ? setStep("preview")
-                  : setQuestionIndex(questionIndex + 1)
+                journey.questionIndex === quiz.questions.length - 1
+                  ? updateJourney({ step: "preview" })
+                  : updateJourney({ questionIndex: journey.questionIndex + 1 })
               }
             />
           )}
 
-          {step === "preview" && (
+          {journey.step === "preview" && (
             <PreviewScreen
               greeting={greeting}
               career={career}
-              onPlans={() => setStep("plans")}
+              onPlans={() => updateJourney({ step: "plans" })}
               onReset={reset}
             />
           )}
 
-          {step === "plans" && (
+          {journey.step === "plans" && (
             <PlansScreen
-              selectedPlan={selectedPlan}
-              onPlan={setSelectedPlan}
-              email={email}
-              onEmail={setEmail}
+              selectedPlan={journey.selectedPlan}
+              onPlan={(selectedPlan) => updateJourney({ selectedPlan })}
+              email={journey.email}
+              onEmail={(email) => updateJourney({ email })}
               error={paymentError}
               isCheckingOut={isCheckingOut}
-              onBack={() => setStep("preview")}
+              onBack={() => updateJourney({ step: "preview" })}
               onCheckout={startCheckout}
             />
           )}
 
-          {step === "complete" && (
+          {journey.step === "complete" && (
             <CompleteScreen greeting={greeting} onReset={reset} />
           )}
         </AppShell>
 
         <ReadingPanel
           articles={articles}
-          page={articlePage}
-          onPageChange={setArticlePage}
+          page={journey.articlePage}
+          onPageChange={(articlePage) => updateJourney({ articlePage })}
         />
       </div>
     </main>

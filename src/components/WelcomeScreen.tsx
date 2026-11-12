@@ -8,7 +8,7 @@ const punchlines = [
   "toward what feels right.",
 ];
 
-export function WelcomeScreen({ onStart }: { onStart: () => void }) {
+export function WelcomeScreen({ onStart, questionCount }: { onStart: () => void; questionCount: number | null }) {
   const [typewriterReady, setTypewriterReady] = useState(false);
   const [punchline] = useTypewriter({
     words: typewriterReady ? punchlines : [punchlines[0]],
@@ -46,13 +46,13 @@ export function WelcomeScreen({ onStart }: { onStart: () => void }) {
           </em>
         </h1>
         <p className="my-5 text-base leading-[1.55] text-muted min-[720px]:mb-7 min-[720px]:max-w-[450px] min-[720px]:text-[17px]">
-          Eight thoughtful questions. A clearer next step. No pressure to have
+          {questionCount ?? "A few"} thoughtful questions. A clearer next step. No pressure to have
           it all figured out.
         </p>
       </div>
       <div className="mb-6 grid grid-cols-3 border-y border-line py-[18px] min-[720px]:col-start-1 min-[720px]:row-start-2 min-[720px]:mb-[25px] min-[720px]:mt-[30px] min-[720px]:max-w-[460px]">
         <div className="grid gap-1 border-r border-line">
-          <strong className="font-display text-[21px] leading-none">8</strong>
+          <strong className="font-display text-[21px] leading-none">{questionCount ?? "—"}</strong>
           <span className="text-xs text-muted">questions</span>
         </div>
         <div className="grid gap-1 border-r border-line pl-3.5">
