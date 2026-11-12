@@ -327,8 +327,14 @@ export default function App() {
               onAudience={(purchaseAudience) => {
                 updateJourney({ purchaseAudience });
                 setSelectedPackageId(
-                  packages.find((item) => item.audience === purchaseAudience)
-                    ?.id
+                  packages.find(
+                    (item) =>
+                      item.audience === purchaseAudience &&
+                      (purchaseAudience === "individual" ||
+                        (journey.seats >= item.minSeats &&
+                          (item.maxSeats === null ||
+                            journey.seats <= item.maxSeats)))
+                  )?.id
                 );
               }}
               onOrganisationName={(organisationName) =>
