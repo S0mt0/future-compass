@@ -20,6 +20,9 @@ export function AppShell({ children, step, onReset }: Props) {
         src="/Cartoon Hand Gripping an Edge-2.png"
         alt=""
         aria-hidden="true"
+        decoding="sync"
+        fetchPriority="high"
+        loading="eager"
       />
       <img
         className="pointer-events-none absolute z-2 hidden w-[285px] rotate-2 select-none drop-shadow-[0_8px_7px_rgba(67,36,23,.15)] min-[720px]:block min-[720px]:right-[-55px] min-[720px]:top-[-78px] min-[720px]:max-[1000px]:right-[-45px] min-[720px]:max-[1000px]:top-[-66px] min-[720px]:max-[1000px]:w-[240px]"
@@ -34,9 +37,15 @@ export function AppShell({ children, step, onReset }: Props) {
           aria-label="Return home"
           className="grid gap-0 bg-transparent text-left text-forest"
         >
-          <span className="font-sans text-[18px] leading-[.73] font-bold tracking-[-1.6px]">Edu</span>
-          <span className="pl-2 font-display text-[17px] leading-[.73] font-semibold tracking-[-1.3px] text-coral italic">compass</span>
-          <span className="mt-1 font-sans text-[8px] leading-none font-medium tracking-[.035em] text-muted">a guide for your next chapter</span>
+          <span className="font-sans text-[18px] leading-[.73] font-bold tracking-[-1.6px]">
+            Edu
+          </span>
+          <span className="pl-2 font-display text-[17px] leading-[.73] font-semibold tracking-[-1.3px] text-coral italic">
+            compass
+          </span>
+          <span className="mt-1 font-sans text-[8px] leading-none font-medium tracking-[.035em] text-muted">
+            a guide for your next chapter
+          </span>
         </button>
       </header>
       <AnimatePresence mode="wait" initial={false}>

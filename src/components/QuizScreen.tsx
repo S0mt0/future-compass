@@ -27,7 +27,9 @@ export function QuizScreen({
     <section className="grid flex-1 overflow-auto p-[10px_28px_108px] min-[720px]:mx-auto min-[720px]:grid-cols-[minmax(260px,.8fr)_minmax(390px,1.2fr)] min-[720px]:gap-x-[clamp(42px,7vw,90px)] min-[720px]:p-[26px_clamp(44px,6vw,76px)_38px] min-[720px]:max-w-[1080px]">
       <div className="col-span-full flex items-center justify-between font-mono text-xs text-muted">
         <div className="flex items-center gap-3">
-          <span className="text-coral">Assessment</span>
+          <span className="text-coral">
+            {question.screenLabel || "Assessment"}
+          </span>
         </div>
         <span>
           Question {index + 1} of {total}
@@ -55,7 +57,7 @@ export function QuizScreen({
         <TypewriterQuestion key={question.id} question={question.text} />
       </h1>
       <p className="mb-[27px] mt-[15px] text-sm text-muted min-[720px]:col-start-1 min-[720px]:text-[15px]">
-        {question.helpText || "Pick the answer that feels most like you today."}
+        Pick the answer that feels most like you today.
       </p>
       <div className="grid gap-3 min-[720px]:col-start-2 min-[720px]:row-[3/span_3] min-[720px]:mt-[38px]">
         {question.answers.map((option, optionIndex) => {
@@ -85,9 +87,11 @@ export function QuizScreen({
                 <strong className="block text-[13px] leading-[1.3] min-[720px]:text-sm">
                   {option.label}
                 </strong>
-                <small className="mt-[5px] block text-[11px] leading-[1.35] text-muted min-[720px]:text-xs">
-                  Choose the answer that feels right for you.
-                </small>
+                {option.detail && (
+                  <small className="mt-[5px] block text-[11px] leading-[1.35] text-muted min-[720px]:text-xs">
+                    {option.detail}
+                  </small>
+                )}
               </span>
               <span
                 aria-hidden="true"

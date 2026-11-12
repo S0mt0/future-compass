@@ -30,6 +30,9 @@ export function ProfileScreen({
           className="h-full w-full object-cover object-[center_29%]"
           src="/image-2.jpg"
           alt="Student smiling with books and a backpack"
+          decoding="sync"
+          fetchPriority="high"
+          loading="eager"
         />
       </div>
       <form
