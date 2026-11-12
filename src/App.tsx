@@ -168,6 +168,13 @@ export default function App() {
       setPaymentError("Choose a subscription package to continue.");
       return;
     }
+    if (
+      journey.purchaseAudience === "organization" &&
+      !journey.organisationName.trim()
+    ) {
+      setPaymentError("Add your organization name to continue.");
+      return;
+    }
     setPaymentError("");
     setIsCheckingOut(true);
     try {
@@ -181,8 +188,12 @@ export default function App() {
       const checkout = await initializeCheckout({
         email: journey.email.trim(),
         name: journey.name.trim() || undefined,
+        organisationName:
+          journey.purchaseAudience === "organization"
+            ? journey.organisationName.trim()
+            : undefined,
         packageId: selectedPackageId,
-        seats: 1,
+        seats: journey.purchaseAudience === "organization" ? journey.seats : 1,
         callbackUrl,
       });
       window.sessionStorage.setItem(
@@ -303,10 +314,24 @@ export default function App() {
           {journey.step === "plans" && (
             <PlansScreen
               packages={packages}
+              audience={journey.purchaseAudience}
               selectedPackageId={selectedPackageId}
               onPlan={setSelectedPackageId}
               email={journey.email}
               onEmail={(email) => updateJourney({ email })}
+              organisationName={journey.organisationName}
+              seats={journey.seats}
+              onAudience={(purchaseAudience) => {
+                updateJourney({ purchaseAudience });
+                setSelectedPackageId(
+                  packages.find((item) => item.audience === purchaseAudience)
+                    ?.id
+                );
+              }}
+              onOrganisationName={(organisationName) =>
+                updateJourney({ organisationName })
+              }
+              onSeats={(seats) => updateJourney({ seats })}
               error={paymentError}
               isCheckingOut={isCheckingOut}
               onBack={() => updateJourney({ step: "preview" })}

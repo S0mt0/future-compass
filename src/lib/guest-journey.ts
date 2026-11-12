@@ -20,6 +20,9 @@ export type GuestJourney = {
   questionIndex: number;
   answers: Record<string, string>;
   selectedPlan: "monthly" | "annual";
+  purchaseAudience: "individual" | "organization";
+  organisationName: string;
+  seats: number;
   email: string;
   articlePage: number;
 };
@@ -35,6 +38,9 @@ export const newGuestJourney = (): GuestJourney => ({
   questionIndex: 0,
   answers: {},
   selectedPlan: "monthly",
+  purchaseAudience: "individual",
+  organisationName: "",
+  seats: 1,
   email: "",
   articlePage: 0,
 });

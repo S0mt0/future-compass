@@ -67,6 +67,7 @@ export const getPackages = async () =>
 export const initializeCheckout = (input: {
   email: string;
   name?: string;
+  organisationName?: string;
   packageId: string;
   seats: number;
   callbackUrl?: string;
