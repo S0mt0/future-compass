@@ -41,6 +41,11 @@ export type VerifiedPayment = {
   transaction: { status?: string };
   accessCode: { code: string; email: string; role: string } | null;
 };
+export class ApiError extends Error {
+  readonly code?: string;
+  readonly status?: number;
+  constructor(message: string, code?: string, status?: number) { super(message); this.name = "ApiError"; this.code = code; this.status = status; }
+}
 
 async function read<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${baseUrl}${path}`, {
@@ -48,8 +53,7 @@ async function read<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
   });
   const body = await response.json().catch(() => null);
-  if (!response.ok)
-    throw new Error(body?.error || "We could not load the assessment.");
+  if (!response.ok) throw new ApiError(typeof body?.error === "string" ? body.error : "We could not complete that request.", typeof body?.code === "string" ? body.code : undefined, response.status);
   return body as T;
 }
 export const getPublishedQuizzes = async () =>

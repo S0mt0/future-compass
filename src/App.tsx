@@ -16,6 +16,7 @@ import {
   getQuiz,
   initializeCheckout,
   verifyPayment,
+  ApiError,
   type Quiz,
   type SubscriptionPackage,
   type VerifiedPayment,
@@ -49,6 +50,16 @@ export default function App() {
   const greeting = journey.name.trim() || "there";
   const updateJourney = (patch: Partial<GuestJourney>) =>
     setJourney((current) => ({ ...current, ...patch }));
+  const paymentMessage = (error: unknown) => {
+    if (error instanceof ApiError) {
+      if (error.code === "PAYSTACK_NOT_CONFIGURED" || error.code === "PAYSTACK_PLAN_PRICE_MISMATCH") return "Payments are temporarily unavailable. Please contact Edu Compass support.";
+      if (error.code === "SUBSCRIPTION_PACKAGE_INVALID") { void getPackages().then(setPackages); return "That package is no longer available. Please select another package."; }
+      if (error.code === "ORGANISATION_NAME_REQUIRED") return "Add your organization name to continue.";
+      if (error.code === "PAYSTACK_REFERENCE_MISMATCH") return "We could not match this payment to your checkout. Please contact support.";
+      return error.message;
+    }
+    return "We could not complete your request. Please try again.";
+  };
 
   const career = "Your unique direction";
 
@@ -132,11 +143,7 @@ export default function App() {
         window.history.replaceState({}, "", "/payment/callback");
       })
       .catch((error) => {
-        setPaymentError(
-          error instanceof Error
-            ? error.message
-            : "We could not verify your payment yet."
-        );
+        setPaymentError(paymentMessage(error));
         setVerification("error");
       });
   }, []);
@@ -202,11 +209,7 @@ export default function App() {
       );
       window.location.assign(checkout.authorization_url);
     } catch (error) {
-      setPaymentError(
-        error instanceof Error
-          ? error.message
-          : "We could not start checkout. Please try again."
-      );
+      setPaymentError(paymentMessage(error));
       setIsCheckingOut(false);
     }
   };
@@ -334,6 +337,11 @@ export default function App() {
               onSeats={(seats) => updateJourney({ seats })}
               error={paymentError}
               isCheckingOut={isCheckingOut}
+              onRetryVerification={
+                verification === "error"
+                  ? () => window.location.reload()
+                  : undefined
+              }
               onBack={() => updateJourney({ step: "preview" })}
               onCheckout={startCheckout}
             />
