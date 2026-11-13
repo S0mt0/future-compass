@@ -33,7 +33,7 @@ export function AppShell({ children, step, onReset, account, onLogout }: Props) 
         alt=""
         aria-hidden="true"
       />
-      <header className="relative z-1 flex h-[88px] items-center justify-between bg-paper px-7 min-[720px]:h-[94px] min-[720px]:rounded-t-[38px] min-[720px]:bg-transparent min-[720px]:px-11">
+      <header className="relative z-3 flex h-[88px] items-center justify-between bg-paper px-7 min-[720px]:h-[94px] min-[720px]:rounded-t-[38px] min-[720px]:bg-transparent min-[720px]:px-11">
         <button
           type="button"
           onClick={onReset}
@@ -50,7 +50,7 @@ export function AppShell({ children, step, onReset, account, onLogout }: Props) 
             a guide for your next chapter
           </span>
         </button>
-        {account && <details className="relative"><summary className="min-h-11 cursor-pointer list-none rounded-full border border-line bg-white px-3 py-2 text-xs font-bold text-forest">Account</summary><div className="absolute right-0 top-[calc(100%+8px)] z-10 w-[230px] rounded-[14px] border border-line bg-paper p-3 shadow-[0_12px_30px_rgba(23,63,56,.16)]"><p className="break-all text-xs text-muted">{account.email}</p><button type="button" className="mt-3 min-h-11 text-sm font-bold text-forest underline" onClick={onLogout}>Log out</button></div></details>}
+        {account && <details className="relative z-10"><summary className="min-h-11 cursor-pointer list-none rounded-full border border-forest bg-white px-4 py-2 text-xs font-bold text-forest shadow-[0_5px_16px_rgba(23,63,56,.14)]">Account</summary><div className="absolute right-0 top-[calc(100%+8px)] z-20 w-[230px] rounded-[14px] border border-line bg-paper p-3 shadow-[0_12px_30px_rgba(23,63,56,.16)]"><p className="break-all text-xs text-muted">{account.email}</p><button type="button" className="mt-3 min-h-11 text-sm font-bold text-forest underline" onClick={onLogout}>Log out</button></div></details>}
       </header>
       <AnimatePresence mode="wait" initial={false}>
         <motion.div

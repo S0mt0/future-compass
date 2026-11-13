@@ -97,7 +97,7 @@ export function CompleteScreen({
         onClick={onReview}
         className="min-[720px]:mx-auto min-[720px]:max-w-[520px]"
       >
-        Review my results <Arrow />
+        Reveal My Results <Arrow />
       </PrimaryButton>
     </section>
   );
